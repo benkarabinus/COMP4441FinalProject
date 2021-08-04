@@ -3,8 +3,9 @@
 #initial setup
 if(!require(DataExplorer)){install.packages("DataExplorer")}
 library(DataExplorer)
-if(!require(tidyr)){install.packages("tidyr")}
-library(tidyr)
+if(!require(tidyverse)){install.packages("tidyverse")}
+library(tidyverse)
+
 
 # Load Datasets
 # Albequerque
@@ -20,7 +21,7 @@ SLC <- read.csv("SLC.csv", header = T)
 
 # ABQ
 summary(ABQ)
-# show data types, factors and levels 
+# show data types, factors and levels (note that date has been read in as a factor)
 str(ABQ)
 #view the first few rows of data
 head(ABQ)
@@ -31,25 +32,43 @@ profile_missing(ABQ)
 # plot of the missing data 
 plot_missing(ABQ, title = "Albequerque", group=c("No Missing Values"=0, 
                           "PCT Missing Values"= 1))
-# replace NA's in the SNOW column 
-ABQ$SNOW[is.na(ABQ$SNOW)] <- 0
+# replace NA's in the SNOW column with the median snowfall 
+ABQ$SNOW[is.na(ABQ$SNOW)] <- median(ABQ$SNOW, na.rm = T)
 #check to ensure replacement
 profile_missing(ABQ)
-
-# replace the missing values for TAVG
+# replace the missing values for TAVG, values replaced by the average of TMAX and TMIN
 ABQTEMP <- data.frame(ABQ$TMAX, ABQ$TMIN)
 ind <- which(is.na(ABQ), arr.ind=TRUE)
+# all temperatures are given as whole numbers in dataset so round the mean
 ABQ[ind] <- round(rowMeans(ABQTEMP, na.rm=TRUE)[ind[,1]],0)
 #check to ensure replacement 
 profile_missing(ABQ)
+# transform DATE column to date data type
+ABQ <- transform(ABQ, DATE = as.Date(DATE))
+#verify changes 
+sapply(ABQ, class)
+# create column month year to aggregate data for time series 
+ABQ$MONTH_YEAR <- floor_date(ABQ$DATE,"month")
+
+# create aggregated dataset using MONTH_YEAR COLUMN from ABQ
+# This aggeregate will be used to create the time series 
+ABQ_AGG <- ABQ %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(value=sum(PRCP)) %>%
+  as.data.frame()
+# create a time series from ABQ_AGG
+ABQ_TS <- ts(ABQ_AGG[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
+# print the new time series 
+ABQ_TS
+# basic plot of the new time series 
+plot(ABQ_TS)
 
 # DEN
 summary(DEN)
 # show data types, factors and levels 
-str(Den)
+str(DEN)
 #view the first few rows of data
 head(DEN)
-
 # visualization to check for missing data
 plot_intro(DEN, title='Denver')
 # if data missing get the details 
@@ -59,32 +78,45 @@ plot_missing(DEN, title = "Denver",
              group=c("No Missing Values"=0, 
                     "PCT Missing Values"= 1))
 # remove NA's for precipitation 
-DEN$PRCP[is.na(DEN$PRCP)] <- median(DEN$PRCP, 
-                                 na.rm = TRUE)
-
+DEN$PRCP[is.na(DEN$PRCP)] <- median(DEN$PRCP, na.rm = TRUE)
 # check to ensure removal 
 profile_missing(DEN)
 # remove the NA's for SNOW
-DEN$SNOW[is.na(DEN$SNOW)] <- median(DEN$SNOW,                                   na.rm = TRUE)
+DEN$SNOW[is.na(DEN$SNOW)] <- median(DEN$SNOW, na.rm = TRUE)
 # check removal 
 profile_missing(DEN)
-
 # remove the NA's for TMAX
-DEN$TMAX[is.na(DEN$TMAX)] <- median(DEN$TMAX,                                   na.rm = TRUE)
+DEN$TMAX[is.na(DEN$TMAX)] <- median(DEN$TMAX, na.rm = TRUE)
 # check removal 
 profile_missing(DEN)
-
 # remove the NA's for TMIN
-DEN$TMIN[is.na(DEN$TMIN)] <- median(DEN$TMIN,                                   na.rm = TRUE)
+DEN$TMIN[is.na(DEN$TMIN)] <- median(DEN$TMIN, na.rm = TRUE)
 # check removal 
 profile_missing(DEN)
-
 # replace the missing values for TAVG
 DENTEMP <- data.frame(DEN$TMAX, DEN$TMIN)
 ind <- which(is.na(DEN), arr.ind=TRUE)
 DEN[ind] <- round(rowMeans(DENTEMP, na.rm=TRUE)[ind[,1]],0)
 #check to ensure replacement 
 profile_missing(DEN)
+# transform DATE column to date data type
+DEN <- transform(DEN, DATE = as.Date(DATE))
+#verify changes 
+sapply(DEN, class)
+# create column month year to aggregate data for time series 
+DEN$MONTH_YEAR <- floor_date(DEN$DATE,"month")
+# create aggregated dataset using MONTH_YEAR COLUMN from DEN
+# This aggeregate will be used to create the time series 
+DEN_AGG <- DEN %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(value=sum(PRCP)) %>%
+  as.data.frame()
+# create a time series from DEN_AGG
+DEN_TS <- ts(DEN_AGG[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
+# print the new time series 
+DEN_TS
+# basic plot of the new time series 
+plot(DEN_TS)
 
 # PHX
 summary(PHX)
@@ -92,26 +124,40 @@ summary(PHX)
 str(PHX)
 #view the first few rows of data
 head(PHX)
-
 # visualization to check for missing data
 plot_intro(PHX, title='Phoenix')
 # if data missing get the details 
 profile_missing(PHX)
 # plot of the missing data 
-plot_missing(PHX, title = "Phoenix", group=c("No Missing Values"=0, 
-                                                 "PCT Missing Values"= 1))
-
+plot_missing(PHX, title = "Phoenix", group=c("No Missing Values"=0,                                                 "PCT Missing Values"= 1))
 # remove the NA's for SNOW
-PHX$SNOW[is.na(PHX$SNOW)] <- median(PHX$SNOW,                                   na.rm = TRUE)
+PHX$SNOW[is.na(PHX$SNOW)] <- median(PHX$SNOW,na.rm = TRUE)
 # check removal 
 profile_missing(PHX)
-
 # replace the missing values for TAVG
 PHXTEMP <- data.frame(PHX$TMAX, PHX$TMIN)
 ind <- which(is.na(PHX), arr.ind=TRUE)
 PHX[ind] <- round(rowMeans(PHXTEMP, na.rm=TRUE)[ind[,1]],0)
 #check to ensure replacement 
 profile_missing(PHX)
+# transform DATE column to date data type
+PHX <- transform(PHX, DATE = as.Date(DATE))
+#verify changes 
+sapply(PHX, class)
+# create column month year to aggregate data for time series 
+PHX$MONTH_YEAR <- floor_date(PHX$DATE,"month")
+# create aggregated dataset using MONTH_YEAR COLUMN from DEN
+# This aggeregate will be used to create the time series 
+PHX_AGG <- PHX %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(value=sum(PRCP)) %>%
+  as.data.frame()
+# create a time series from PHX_AGG
+PHX_TS <- ts(PHX_AGG[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
+# print the new time series 
+PHX_TS
+# basic plot of the new time series 
+plot(PHX_TS)
 
 # SLC
 summary(SLC)
@@ -138,3 +184,21 @@ ind <- which(is.na(SLC), arr.ind=TRUE)
 SLC[ind] <- round(rowMeans(SLCTEMP, na.rm=TRUE)[ind[,1]],0)
 #check to ensure replacement 
 profile_missing(SLC)
+# transform DATE column to date data type
+SLC <- transform(SLC, DATE = as.Date(DATE))
+#verify changes 
+sapply(SLC, class)
+# create column month year to aggregate data for time series 
+SLC$MONTH_YEAR <- floor_date(SLC$DATE,"month")
+# create aggregated dataset using MONTH_YEAR COLUMN from DEN
+# This aggeregate will be used to create the time series 
+SLC_AGG <- SLC %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(value=sum(PRCP)) %>%
+  as.data.frame()
+# create a time series from PHX_AGG
+SLC_TS <- ts(SLC_AGG[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
+# print the new time series 
+SLC_TS
+# basic plot of the new time series 
+plot(SLC_TS)
