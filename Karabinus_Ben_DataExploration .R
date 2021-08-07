@@ -8,10 +8,10 @@ library(tidyverse)
 
 
 # Load Datasets
-# Albequerque
+# Albuquerque
 ABQ <- read.csv("ABQ.csv", header = T)
 # Denver
-DEN <- read.csv("Den.csv", header = T)
+DEN <- read.csv("DEN.csv", header = T)
 # Phoenix
 PHX <- read.csv("PHX.csv", header = T)
 # Salt Lake City 
