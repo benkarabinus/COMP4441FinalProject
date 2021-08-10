@@ -1,15 +1,17 @@
-# Final project COMP 4441 Data Exploration Ben Karabinus 7/31/2021
-
 #initial setup
 library(DataExplorer)
 library(tidyverse)
 library(lubridate)
+library(tseries)
 library(forecast)
 library(ggplot2)
 library(dplyr)
 library(TTR)
 library(fpp2)
 library(reader)
+library(stats)
+
+adf.
 
 setwd("/home/ellmann/Documents/stats/COMP4441FinalProject")
 
@@ -70,17 +72,63 @@ ABQ$YEAR <- floor_date(ABQ$DATE,"year")
 # # basic plot of the new time series 
 # plot(ABQ_TS)
 
-ABQ_AGG <- ABQ %>%
+# ABQ_AGG <- ABQ %>%
+#   group_by(MONTH_YEAR)%>%
+#   dplyr::summarize(value=mean((TAVG))) %>%
+#   as.data.frame()
+
+ABQ_AGG_PRCP <- ABQ %>%
   group_by(MONTH_YEAR)%>%
-  dplyr::summarize(value=mean((TAVG))) %>%
+  dplyr::summarize(value=mean(PRCP)) %>%
+  as.data.frame()
+
+ABQ_AGG_SNOW <- ABQ %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(value=sum(SNOW)) %>%
+  as.data.frame()
+
+ABQ_AGG_TAVG <- ABQ %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(value=mean(TAVG)) %>%
   as.data.frame()
 
 
 # create a time series from ABQ_AGG
-ABQ_TS <- ts(ABQ_AGG[, 2], start= c(1970,1), end= c(2019,12), frequency = 365)
-plot(ABQ_TS)
-ABQ_TS
+# abq_ts <- ts(ABQ_AGG[, 2], start= c(1970,1), end= c(2019,12), frequency = 1)
+# summary(abq_ts)
+# start(abq_ts)
+# end(abq_ts)
+# frequency(abq_ts)
+# plot(abq_ts)
+# linearModel = lm(abq_ts ~ time(abq_ts))
+# abline(reg = linearModel) # fit in a Linear Model (Intercept & Slope), and plot the line 
+# 
+# plot(abq_ts)
 
-arima<-auto.arima(ABQ_TS)
+ABQ_TS_PRCP <- ts(ABQ_AGG_PRCP[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
+# ABQ_TS_SNOW <- ts(ABQ_AGG_SNOW[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
+# ABQ_TS_TAVG <- ts(ABQ_AGG_TAVG[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
+
+plot(ABQ_TS_PRCP)
+dim(ABQ_TS_PRCP)
+
+
+
+plot(diff(log(ABQ_AGG$value)))
+summary(abq_ts)
+start(abq_ts)
+end(abq_ts)
+frequency(abq_ts)
+plot(abq_ts)
+linearModel = lm(abq_ts ~ time(abq_ts))
+abline(reg = linearModel) # fit in a Linear Model (Intercept & Slope), and plot the line 
+plot(abq_ts)
+
+
+
+
+arima<-auto.arima(abq_ts)
+pred <- forecast(arima, h=50)
+plot(pred)
 summary(arima)
 

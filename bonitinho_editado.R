@@ -1,4 +1,4 @@
-# Final project COMP 4441 Data Exploration Ben Karabinus 7/31/2021
+library(forecast)
 
 #initial setup
 if(!require(DataExplorer)){install.packages("DataExplorer")}
@@ -33,7 +33,7 @@ profile_missing(ABQ)
 plot_missing(ABQ, title = "Albequerque", group=c("No Missing Values"=0, 
                           "PCT Missing Values"= 1))
 # replace NA's in the SNOW column with the median snowfall 
-ABQ$SNOW[is.na(ABQ$SNOW)] <- median(ABQ$SNOW, na.rm = T) ### depende! 
+ABQ$SNOW[is.na(ABQ$SNOW)] <- median(ABQ$SNOW, na.rm = T)
 #check to ensure replacement
 profile_missing(ABQ)
 # replace the missing values for TAVG, values replaced by the average of TMAX and TMIN
@@ -52,18 +52,37 @@ ABQ$MONTH_YEAR <- floor_date(ABQ$DATE,"month")
 
 # create aggregated dataset using MONTH_YEAR COLUMN from ABQ
 # This aggeregate will be used to create the time series 
-ABQ_AGG <- ABQ %>%
+ABQ_AGG_PRCP<- ABQ %>%
   group_by(MONTH_YEAR)%>%
-  dplyr::summarize(value=mean(PRCP)) %>%
+  dplyr::summarize(value=sum(PRCP)) %>%
   as.data.frame()
 # create a time series from ABQ_AGG
-ABQ_TS <- ts(ABQ_AGG[, 2][1:36], start= c(1970,1), end= c(1972,12), frequency = 1)
+ABQ_TS <- ts(ABQ_AGG[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
 # print the new time series 
 ABQ_TS
 # basic plot of the new time series 
 plot(ABQ_TS)
 
+library(tseries)
 
+adf.test(ABQ_TS,alternative = "stationary")
+
+modelo=auto.arima(ABQ_TS)
+modelo
+ABQ_TS2 <- ts(tail(ABQ_AGG[, 2],60), start= c(2015,1), end= c(2019,12), frequency = 12)
+# print the new time series 
+ABQ_TS2
+
+plot(ABQ_TS2)
+
+modelo2=arima(ABQ_TS2,c(0,0,2),c(2,0,0))
+
+plot(forecast(modelo,h=60),xlim=c(2010,2024))
+
+
+a=forecast(modelo,h=60)
+
+a$lower # fix this
 
 # DEN
 summary(DEN)
