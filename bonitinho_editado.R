@@ -1,83 +1,60 @@
-library(forecast)
-
-#initial setup
-if(!require(DataExplorer)){install.packages("DataExplorer")}
+library(tseries)
 library(DataExplorer)
-if(!require(tidyverse)){install.packages("tidyverse")}
 library(tidyverse)
+library(forecast)
+library(lubridate)
 
+setwd("/home/ellmann/Documents/stats/COMP4441FinalProject")
 
-# Load Datasets
-# Albuquerque
 ABQ <- read.csv("ABQ.csv", header = T)
-# Denver
-DEN <- read.csv("DEN.csv", header = T)
-# Phoenix
-PHX <- read.csv("PHX.csv", header = T)
-# Salt Lake City 
-SLC <- read.csv("SLC.csv", header = T)
-
-####explore the datasets and replace missing values####
-
-# ABQ
-summary(ABQ)
-# show data types, factors and levels (note that date has been read in as a factor)
-str(ABQ)
-#view the first few rows of data
-head(ABQ)
-# visualization to check for missing data
-plot_intro(ABQ, title='Albequerque')
-# if data missing get the details 
-profile_missing(ABQ)
-# plot of the missing data 
-plot_missing(ABQ, title = "Albequerque", group=c("No Missing Values"=0, 
-                          "PCT Missing Values"= 1))
-# replace NA's in the SNOW column with the median snowfall 
 ABQ$SNOW[is.na(ABQ$SNOW)] <- median(ABQ$SNOW, na.rm = T)
-#check to ensure replacement
-profile_missing(ABQ)
-# replace the missing values for TAVG, values replaced by the average of TMAX and TMIN
 ABQTEMP <- data.frame(ABQ$TMAX, ABQ$TMIN)
 ind <- which(is.na(ABQ), arr.ind=TRUE)
-# all temperatures are given as whole numbers in dataset so round the mean
 ABQ[ind] <- round(rowMeans(ABQTEMP, na.rm=TRUE)[ind[,1]],0)
-#check to ensure replacement 
 profile_missing(ABQ)
-# transform DATE column to date data type
 ABQ <- transform(ABQ, DATE = as.Date(DATE))
-#verify changes 
-sapply(ABQ, class)
-# create column month year to aggregate data for time series 
 ABQ$MONTH_YEAR <- floor_date(ABQ$DATE,"month")
 
-# create aggregated dataset using MONTH_YEAR COLUMN from ABQ
-# This aggeregate will be used to create the time series 
+
 ABQ_AGG_PRCP<- ABQ %>%
   group_by(MONTH_YEAR)%>%
   dplyr::summarize(value=sum(PRCP)) %>%
   as.data.frame()
-# create a time series from ABQ_AGG
-ABQ_TS <- ts(ABQ_AGG[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
-# print the new time series 
-ABQ_TS
-# basic plot of the new time series 
-plot(ABQ_TS)
 
-library(tseries)
+ABQ_AGG_SNOW<- ABQ %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(value=sum(SNOW)) %>%
+  as.data.frame()
 
-adf.test(ABQ_TS,alternative = "stationary")
+ABQ_AGG_TAVG<- ABQ %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(value=mean(TAVG)) %>%
+  as.data.frame()
 
-modelo=auto.arima(ABQ_TS)
-modelo
-ABQ_TS2 <- ts(tail(ABQ_AGG[, 2],60), start= c(2015,1), end= c(2019,12), frequency = 12)
-# print the new time series 
-ABQ_TS2
+ABQ_TS_PRCP <- ts(ABQ_AGG_PRCP[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
+ABQ_TS_SNOW <- ts(ABQ_AGG_SNOW[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
+ABQ_TS_TAVG <- ts(ABQ_AGG_TAVG[, 2], start= c(1970,1), end= c(2019,12), frequency = 12)
 
-plot(ABQ_TS2)
+adf.test(ABQ_TS_PRCP,alternative = "stationary")
+adf.test(ABQ_TS_SNOW,alternative = "stationary")
+adf.test(ABQ_TS_TAVG,alternative = "stationary")
 
-modelo2=arima(ABQ_TS2,c(0,0,2),c(2,0,0))
+model_prcp=auto.arima(ABQ_TS_PRCP)
+model_snow=auto.arima(ABQ_TS_SNOW)
+model_tavg=auto.arima(ABQ_TS_TAVG)
 
-plot(forecast(modelo,h=60),xlim=c(2010,2024))
+forecast_prcp=forecast(model_prcp,h=60)
+forecast_snow=forecast(model_snow,h=60)
+forecast_tavg=forecast(model_tavg,h=60)
+
+forecast_prcp$lower<-apply(forecast_prcp$lower, 2, function(x) ifelse(x < 0, 0, x))
+forecast_snow$lower<-apply(forecast_snow$lower, 2, function(x) ifelse(x < 0, 0, x))
+
+
+
+plot(forecast_prcp,xlim=c(2019,2024))
+plot(forecast_snow,xlim=c(2019,2024))
+plot(forecast_tavg,xlim=c(2019,2022))
 
 
 a=forecast(modelo,h=60)
