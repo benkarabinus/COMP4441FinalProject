@@ -1,0 +1,302 @@
+---
+title: Seasonal Autoregressive Integrated Moving Acerage (SARIMA) Analysis and Predicition
+  of Seasonal Weather Patterns in the Four Corners Region of the United Steates
+author: "Ben Karabinus"
+date: "8/12/2021"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+if(!require(DataExplorer)){install.packages("DataExplorer")}
+library(DataExplorer)
+if(!require(tidyverse)){install.packages("tidyverse")}
+library(tidyverse)
+library(ggplot2)
+if(!require(forecast)){install.packages("forecast")}
+library(forecast)
+if(!require(TSstudio)){install.packages("TSstudio")}
+library(TSstudio)
+if(!require(lubridate)){install.packages("lubridate")}
+library(lubridate)
+if(!require(plotly)){install.packages("plotly")}
+library(plotly)
+if(!require(stats)){install.packages("stats")}
+library(stats)
+```
+
+## Problem Statement
+
+In the past decades there has been a noticeable increase in the volatility of weather patterns in the Western United States. In particular, the four corners region (Arizona, Colorado, New Mexico and Utah) have experienced prolonged drought, monsoon rainfall, and a noticeable increase in the intensity and duration of heat waves. To better understand seasonal weather patterns in the region this report focuses on a time-series analysis of mean monthly temperature, total monthly precipitation and total monthly snowfall in the period between January 1, 1970 and December 31, 2019. Time-series analysis was carried using a Seasonal Autregressive Integrated Moving Average (SARIMA) model. The primary research questions addressed are as follows:
+
+* Is there a noticeable trend in monthly mean temperature, total monthly precipitation, or total monthly snowfall?
+* What does the trend in any or all of these measures tell us about weather patterns in the previous 5 decades?
+* Is the SARIMA model an effective means of visualizng and predicting mean monthly temperature, total monthly precipitation and total monthly snowfall in the four corners region of the United States.
+
+## Data Collection
+
+Data for the analysis was sourced from the GLobal Historical Climatology Network (GHCN). The GHCN is an integrated database of daily climate summaries from land surface weather stations across the globe. The data contain records from more than 100,000 stations in 180 countries and territories. All records are subject to a common suite of quality assurance reviews to miantain accuracy though uniformity of reporting stndards. All GHCN records include but are not limited too the following daily variables: 
+
+* Daily maximum and Daily minimum temperatue 
+* Total daily precipitation
+* Total daily snowfall
+
+### US Collection of GHCN Data
+
+Daily weather records from the United States are compiled from a dozen separate datasets archived at the Nation Centers of Environmental Information (NCEI), a branch of the National Oceanic and Atmospheric Administration (NOAA). NCEI is responsible fo hosting and providing access to one of the most significant stores of environmental data in existence with over 37 petabytes of oceanic, atmospheric and geophyscical data (National Centers for Environmental Information, 2019).
+
+### Variables Included in the Model
+
+* Average daily temperature (Degrees Farenheight)
+* Total Daily precipitation (Inches)
+* Total Daily Snowfall (Inches)
+
+For more detailed information on each of the variables listed above pleas see the data dictionary (Appendix A)
+
+## Data Set Features and Data Preparation
+
+### Data Set Summary 
+
+The data used in this report were observed at weather stations in four major cities located in the southwestern United States, specifically (Phoenix, Arizona), (Denver, Colorado), (Albequerque,New Mexico) and (Salt Lake City, Utah). Data was collected via land-based weather stations at major airports in each city with the exception being data collected in Denver, Colorado. Weather observations for Denver were collected using a land-based weather station located in the Sand Creek Open Space in the Denver Central Park Region in the Northwest corner of the city. Data for each city where downloaded as seperate comma seperated (csv) files. Exploration of the features of the data, data cleansing and initial visualization were carried out using the "DataExplorer" package available in R.
+
+### Data Discovery and Cleansing Process 
+
+Prior to conducting time-series analysis
+
+```{r echo=FALSE}
+# Load Datasets
+# Albuquerque
+ABQ <- read.csv("ABQ.csv", header = T)
+# Denver
+DEN <- read.csv("DEN.csv", header = T)
+# Phoenix
+PHX <- read.csv("PHX.csv", header = T)
+# Salt Lake City 
+SLC <- read.csv("SLC.csv", header = T)
+```
+
+#### Summary statistics for each data set 
+
+```{r echo=TRUE}
+# Albuquerque
+summary(ABQ)
+
+```
+
+
+```{r echo=TRUE}
+# Denver 
+summary(DEN)
+```
+
+
+```{r echo=TRUE}
+# Phoenix
+summary(PHX)
+```
+
+```{r echo=TRUE}
+# Salt Lake City 
+summary(SLC)
+```
+
+#### Structure of Each Data Set (Number of Observations and Variable Type)
+
+```{r echo=TRUE}
+# Albuquerque
+str(ABQ)
+```
+
+```{r echo=TRUE}
+# Denver
+str(DEN)
+```
+
+```{r echo=TRUE}
+# Phoenix
+str(PHX)
+```
+
+```{r echo=TRUE}
+# Salt Lake City 
+str(SLC)
+```
+
+#### Visualize Missing Values From Each Dataset
+
+```{r echo=TRUE}
+# Albuquerque
+plot_missing(ABQ, title = "Albuquerque",  group=c("No Missing Values"=0, 
+                          "PCT Missing Values"= 1))
+```
+
+```{r echo=TRUE}
+# Denver
+plot_missing(DEN, title = "Denver",  group=c("No Missing Values"=0, 
+                          "PCT Missing Values"= 1))
+```
+
+```{r echo=TRUE}
+# Phoenix
+plot_missing(PHX, title = "Phoenix", group=c("No Missing Values"=0,
+                                             "PCT Missing Values"= 1))
+```
+
+```{r echo=TRUE}
+# Salt Lake City 
+plot_missing(SLC, title = "Salt Lake City ", group=c("No Missing Values"=0, 
+                                                "PCT Missing Values"= 1))
+```
+
+#### Replace Misssing Values 
+
+The above graphs shows that each of the data sets are missing observations for one or more values. To avoid the effects of outliers in the missing values for TMIN, TMAX, PRCP and SNOW will be replaced with the  median value for each of the respective values. According GHCN Daily TAVG is calculated by taking the mean of value for daily observations of TMAX and TMIN, That is daily $TAVG=\frac{TMAX+TMIN}{2}$. Therefore, missing values for TAVG will be replaced using this formula.  
+
+```{r echo=TRUE}
+# replace missing values in ABQ
+# replace NA's in the SNOW column with the median snowfall 
+ABQ$SNOW[is.na(ABQ$SNOW)] <- median(ABQ$SNOW, na.rm = T)
+# replace the missing values for TAVG
+ABQTEMP <- data.frame(ABQ$TMAX, ABQ$TMIN)
+ind <- which(is.na(ABQ), arr.ind=TRUE)
+# all temperatures are given as whole numbers in dataset so round the mean
+ABQ[ind] <- round(rowMeans(ABQTEMP, na.rm=TRUE)[ind[,1]],0)
+#check to ensure replacement 
+profile_missing(ABQ)
+```
+
+```{r echo=TRUE}
+# replace missing values in DEN
+# remove NA's for precipitation 
+DEN$PRCP[is.na(DEN$PRCP)] <- median(DEN$PRCP, na.rm = TRUE)
+# remove the NA's for SNOW
+DEN$SNOW[is.na(DEN$SNOW)] <- median(DEN$SNOW, na.rm = TRUE)
+# remove the NA's for TMAX
+DEN$TMAX[is.na(DEN$TMAX)] <- median(DEN$TMAX, na.rm = TRUE)
+# remove the NA's for TMIN
+DEN$TMIN[is.na(DEN$TMIN)] <- median(DEN$TMIN, na.rm = TRUE)
+# replace the missing values for TAVG
+DENTEMP <- data.frame(DEN$TMAX, DEN$TMIN)
+ind <- which(is.na(DEN), arr.ind=TRUE)
+# all temperatures are given as whole numbers in dataset so round the mean
+DEN[ind] <- round(rowMeans(DENTEMP, na.rm=TRUE)[ind[,1]],0)
+#check to ensure replacement 
+profile_missing(DEN)
+```
+
+```{r echo=TRUE}
+# replace missing values in PHX
+# remove the NA's for SNOW
+PHX$SNOW[is.na(PHX$SNOW)] <- median(PHX$SNOW,na.rm = TRUE)
+# replace the missing values for TAVG
+PHXTEMP <- data.frame(PHX$TMAX, PHX$TMIN)
+ind <- which(is.na(PHX), arr.ind=TRUE)
+# all temperatures are given as whole numbers in dataset so round the mean
+PHX[ind] <- round(rowMeans(PHXTEMP, na.rm=TRUE)[ind[,1]],0)
+#check to ensure replacement 
+profile_missing(PHX)
+```
+
+```{r echo=TRUE}
+# replace missing values in SLC 
+# remove the NA's for SNOW
+SLC$SNOW[is.na(SLC$SNOW)] <- median(SLC$SNOW,na.rm = TRUE)
+# replace the missing values for TAVG
+SLCTEMP <- data.frame(SLC$TMAX, SLC$TMIN)
+ind <- which(is.na(SLC), arr.ind=TRUE)
+SLC[ind] <- round(rowMeans(SLCTEMP, na.rm=TRUE)[ind[,1]],0)
+#check to ensure replacement 
+profile_missing(SLC)
+```
+
+#### Preparing Data for Time Series Analysis
+
+```{r echo=TRUE}
+# transform date column from factor to date data type in each data set
+ABQ <- transform(ABQ, DATE = as.Date(DATE))
+DEN <- transform(DEN, DATE = as.Date(DATE))
+PHX <- transform(PHX, DATE = as.Date(DATE))
+SLC <- transform(SLC, DATE = as.Date(DATE))
+#verify changes 
+ABQ_DELTA <- sapply(ABQ, class)
+DEN_DELTA <- sapply(DEN, class)
+PHX_DELTA <- sapply(PHX, class)
+SLC_DELTA <- sapply(SLC, class)
+```
+
+```{r echo=TRUE}
+ABQ_DELTA
+```
+
+```{r echo=TRUE}
+DEN_DELTA
+```
+
+```{r echo=TRUE}
+PHX_DELTA
+```
+
+```{r ech=TRUE}
+SLC_DELTA
+```
+
+#### Aggregate Data for Analysis of Monthly Values 
+
+```{r echo=TRUE}
+# Albuquerque
+# create column month year to aggregate data for time series 
+ABQ$MONTH_YEAR <- floor_date(ABQ$DATE,"month")
+# create aggregated dataset using MONTH_YEAR COLUMN
+ABQ_AGG <- ABQ %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(Monthly_Avg_Temp = mean(TAVG),
+  Monthly_Rainfall=sum(PRCP), Monthly_Snowfall=sum(SNOW)) %>%
+  as.data.frame()
+head(ABQ_AGG)
+```
+
+
+
+```{r echo=TRUE}
+# Denver 
+# create column month year to aggregate data for time series 
+DEN$MONTH_YEAR <- floor_date(DEN$DATE,"month")
+# create aggregated dataset using MONTH_YEAR COLUMN
+# This aggeregate will be used to create the time series 
+DEN_AGG <- DEN %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(Monthly_Avg_Temp = mean(TAVG),
+  Monthly_Rainfall=sum(PRCP), Monthly_Snowfall=sum(SNOW)) %>%
+  as.data.frame()
+DEN_AGG
+```
+
+
+```{r echo=TRUE}
+# Phoenix 
+# create column month year to aggregate data for time series 
+PHX$MONTH_YEAR <- floor_date(DEN$DATE,"month")
+# create aggregated dataset using MONTH_YEAR COLUMN
+PHX_AGG <- PHX %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(Monthly_Avg_Temp = mean(TAVG),
+  Monthly_Rainfall=sum(PRCP), Monthly_Snowfall=sum(SNOW)) %>%
+  as.data.frame()
+PHX
+```
+
+
+```{r echo=TRUE}
+# Salt Lake City 
+# create column month year to aggregate data for time series 
+SLC$MONTH_YEAR <- floor_date(DEN$DATE,"month")
+# create aggregated dataset using MONTH_YEAR COLUMN
+SLC_AGG <- DEN %>%
+  group_by(MONTH_YEAR)%>%
+  dplyr::summarize(Monthly_Avg_Temp = mean(TAVG),
+  Monthly_Rainfall=sum(PRCP), Monthly_Snowfall=sum(SNOW)) %>%
+  as.data.frame()
+SLC_AGG
+```
+
+
