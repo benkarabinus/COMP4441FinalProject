@@ -3,9 +3,10 @@ title: Time Series Analysis of Seasonal Weather Patterns in the Four Corners Reg
 author: "Ben Karabinus"
 date: "8/12/2021"
 output:
+  html_document: default
   pdf_document: default
   word_document: default
-  html_document: default
+  always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
@@ -151,7 +152,7 @@ plot_missing(SLC, title = "Salt Lake City ", group=c("No Missing Values"=0,
 
 #### Replace Missing Values 
 
-The above graphs show that each of the data sets are missing observations for one or more values. To avoid the effects of outliers, missing values for TMIN, TMAX, PRCP and SNOW will be replaced with the median value for each of the respective variables. According GHCN Daily TAVG is calculated by taking the mean value for daily observations of TMAX and TMIN and rounding up to the nearest integer, That is daily $TAVG=ceiling(\frac{TMAX+TMIN}{2})$. Therefore, missing values for TAVG will be replaced using this formula. For readability only the replacement of missing values from the "ABQ" data set is detailed below. Please see the .rmd version of this report for a more in depth eplanation of the replacement process.
+The above graphs show that each of the data sets are missing observations for one or more values. To avoid the effects of outliers, missing values for TMIN, TMAX, PRCP and SNOW will be replaced with the median value for each of the respective variables. According GHCN Daily TAVG is calculated by taking the mean value for daily observations of TMAX and TMIN and rounding up to the nearest integer, That is daily $TAVG=ceiling(\frac{TMAX+TMIN}{2})$. Therefore, missing values for TAVG will be replaced using this formula. For readability only the replacement of missing values from the "ABQ" data set is detailed below. Please see the .rmd version of this report for a more in depth explanation of the replacement process.
 
 ```{r echo=TRUE}
 # replace missing values in ABQ
@@ -301,7 +302,7 @@ SLC_AGG <- SLC %>%
 
 #### What is a SARIMA Model?
 
-A SARIMA model is the seasonal flavor of the autoregressive integrated moving average (ARIMA) model. ARIMA and SARIMA models are a statistical technique used to analyze times series data and in certain cases predict future values. The goal of autoregressive models is to predict future values of the target variable by regressing against past observations of the variable. That is lagged values of the target variable are used as independent variables "x's" in the regression equation (Yiu, 2020). Seasonal autoregressive models are used to perform similar analysis while accounting for any seasonality obesrved in the time series being analyzed. ARIMA and SARIMA models also incorporate differencing to correct for data that is not stationary and a moving average component that includes errors in previous predictions as a parameter in the model. To better understand the method a brief summary of each component is given below.
+A SARIMA model is the seasonal flavor of the autoregressive integrated moving average (ARIMA) model. ARIMA and SARIMA models are a statistical technique used to analyze times series data and in certain cases predict future values. The goal of autoregressive models is to predict future values of the target variable by regressing against past observations of the variable. That is, lagged values of the target variable are used as independent variables "x's" in the regression equation (Yiu, 2020). Seasonal autoregressive models are used to perform similar analysis while accounting for any seasonality observed in the time series being analyzed. ARIMA and SARIMA models also incorporate differencing to correct for data that is not stationary and a moving average component that includes errors in previous predictions as a parameter in the model. To better understand the method a brief summary of each component is given below.
 
 
 #### Autoregressive (p)
@@ -310,7 +311,7 @@ Considering an observed value "Y" to be a linear function of it's past observati
 
 $$Y=B0+B1*Y_{lag1}+B2*Y_{lag2}......Bn*Y_{lagn}$$
 
-By tweaking this equation we can attemmpt to predict future values of Y.
+By tweaking this equation we can attempt to predict future values of Y.
 
 $$Y_{forward1}=B0+B1*Y+B2*Y_{lag1}......Bn*Y_{lag(n-1)}$$
 
@@ -410,7 +411,7 @@ plot(ABQ_TS_SNOW)
 ```{r echo=FALSE}
 # shorten the time span and customize the plot (close up view)
 ABQ_TS_TEMP_SHORT <- ts(ABQ_AGG[, 2], start= c(2010,1), end= c(2019,12), frequency = 12)
-ABQ_TEMP_PLT <- ts_plot(ABQ_TS_TEMP_SHORT, title = "Mean Monthly Temperature Albuqurque, NM",                           Xtitle = "Time",
+ABQ_TEMP_PLT <- ts_plot(ABQ_TS_TEMP_SHORT, title = "Mean Monthly Temperature Albuquerque, NM",                           Xtitle = "Time",
                         Ytitle="Temperature (F)",
                         color="#ff0000",
                         Xgrid=TRUE,
@@ -426,7 +427,7 @@ ABQ_TEMP_PLT <- ts_plot(ABQ_TS_TEMP_SHORT, title = "Mean Monthly Temperature Alb
                     gridcolor="White"))
 ABQ_TS_PRCP_SHORT <- ts(ABQ_AGG[, 3], start= c(2010,1), end= c(2019,12), frequency = 12)
 ABQ_PRCP_PLT <- ts_plot(ABQ_TS_PRCP_SHORT, title = "Monthly Rainfall Albuquerque, NM", Xtitle = "Time",
-                     Ytitle="Total Montlhy Rainfall (inches)",
+                     Ytitle="Total Monthly Rainfall (inches)",
                      color="#07d870",
                      Xgrid=TRUE,
                      Ygrid=TRUE) %>%
@@ -442,7 +443,7 @@ ABQ_PRCP_PLT <- ts_plot(ABQ_TS_PRCP_SHORT, title = "Monthly Rainfall Albuquerque
 ABQ_TS_SNOW_SHORT <- ts(ABQ_AGG[, 4], start= c(2010,1), end= c(2019,12), frequency = 12)
 ABQ_SNOW_PLT <- ts_plot(ABQ_TS_SNOW_SHORT, title = "Monthly Snowfall Albuquerque, NM", 
                         Xtitle ="Time",
-                        Ytitle="Total Montlhy Snowfall (inches)",
+                        Ytitle="Total Monthly Snowfall (inches)",
                         color="#4982ff",
                         Xgrid=TRUE,
                         Ygrid=TRUE) %>%
@@ -505,7 +506,7 @@ DEN_TEMP_PLT <- ts_plot(DEN_TS_TEMP_SHORT, title = "Mean Monthly Temperature Den
                     gridcolor="White"))
 DEN_TS_PRCP_SHORT <- ts(DEN_AGG[, 3], start= c(2010,1), end= c(2019,12), frequency = 12)
 DEN_PRCP_PLT <- ts_plot(DEN_TS_PRCP_SHORT, title = "Monthly Rainfall Denver, CO",                                    Xtitle = "Time",
-                     Ytitle="Total Montlhy Rainfall (inches)",
+                     Ytitle="Total Monthly Rainfall (inches)",
                      color="#07d870",
                      Xgrid=TRUE,
                      Ygrid=TRUE) %>%
@@ -521,7 +522,7 @@ DEN_PRCP_PLT <- ts_plot(DEN_TS_PRCP_SHORT, title = "Monthly Rainfall Denver, CO"
 DEN_TS_SNOW_SHORT <- ts(DEN_AGG[, 4], start= c(2010,1), end= c(2019,12), frequency = 12)
 DEN_SNOW_PLT <- ts_plot(DEN_TS_SNOW_SHORT, title = "Monthly Snowfall Denver, CO", 
                         Xtitle ="Time",
-                        Ytitle="Total Montlhy Snowfall (inches)",
+                        Ytitle="Total Monthly Snowfall (inches)",
                         color="#4982ff",
                         Xgrid=TRUE,
                         Ygrid=TRUE) %>%
@@ -585,7 +586,7 @@ PHX_TEMP_PLT <- ts_plot(PHX_TS_TEMP_SHORT, title = "Mean Monthly Temperature Pho
                     gridcolor="White"))
 PHX_TS_PRCP_SHORT <- ts(PHX_AGG[, 3], start= c(2010,1), end= c(2019,12), frequency = 12)
 PHX_PRCP_PLT <- ts_plot(PHX_TS_PRCP_SHORT, title = "Monthly Rainfall Phoenix, AZ",                                   Xtitle = "Time",
-                     Ytitle="Total Montlhy Rainfall (inches)",
+                     Ytitle="Total Monthly Rainfall (inches)",
                      color="#07d870",
                      Xgrid=TRUE,
                      Ygrid=TRUE) %>%
@@ -601,7 +602,7 @@ PHX_PRCP_PLT <- ts_plot(PHX_TS_PRCP_SHORT, title = "Monthly Rainfall Phoenix, AZ
 PHX_TS_SNOW_SHORT <- ts(PHX_AGG[, 4], start= c(2010,1), end= c(2019,12), frequency = 12)
 PHX_SNOW_PLT <- ts_plot(PHX_TS_SNOW_SHORT, title = "Monthly Snowfall Phoenix, AZ", 
                         Xtitle ="Time",
-                        Ytitle="Total Montlhy Snowfall (inches)",
+                        Ytitle="Total Monthly Snowfall (inches)",
                         color="#4982ff",
                         Xgrid=TRUE,
                         Ygrid=TRUE) %>%
@@ -622,7 +623,7 @@ PHX_PRCP_PLT
 PHX_TEMP_PLT
 ```
 
- * Decomposition of time series from the city of Phoenix shows that the series for mean monthly temperature, total  monthly precipitation and total monthly snowfall each exhibit a strong seasonal component similar to the time series data from both Denver and Albuquerque. Examining the plots of the decomposed series below it's worth noting that there seems to be a slight upward trend in both mean monthly temperature and total monthly precipitation occurring around around the year 2016. The trend in monthly precipitation may be attributed to a multi-year seasonal pattern, but the rising trend in mean monthly temperature appears at a glance to be more of a departure from the trend of past observations. The decomposition of the series for monthly snowfall confirms that it rarely snows in Phoenix. The series will be omitted from further analysis in this report.
+ * Decomposition of time series from the city of Phoenix shows that the series for mean monthly temperature, total  monthly precipitation and total monthly snowfall each exhibit a strong seasonal component similar to the time series data from both Denver and Albuquerque. Examining the plots of the decomposed series below it's worth noting that there seems to be a slight upward trend in both mean monthly temperature and total monthly precipitation occurring around the year 2016. The trend in monthly precipitation may be attributed to a multi-year seasonal pattern, but the rising trend in mean monthly temperature appears at a glance to be more of a departure from the trend of past observations. The decomposition of the series for monthly snowfall confirms that it rarely snows in Phoenix. The series will be omitted from further analysis in this report.
 
 ```{r echo=FALSE}
 ts_decompose(PHX_TS_TEMP_SHORT)
@@ -661,7 +662,7 @@ SLC_TEMP_PLT <- ts_plot(SLC_TS_TEMP_SHORT, title ="Mean Monthly Temperature Salt
                     gridcolor="White"))
 SLC_TS_PRCP_SHORT <- ts(SLC_AGG[, 3], start= c(2010,1), end= c(2019,12), frequency = 12)
 SLC_PRCP_PLT <- ts_plot(SLC_TS_PRCP_SHORT, title = "Monthly Rainfall Salt Lake City, UT",                            Xtitle = "Time",
-                     Ytitle="Total Montlhy Rainfall (inches)",
+                     Ytitle="Total Monthly Rainfall (inches)",
                      color="#07d870",
                      Xgrid=TRUE,
                      Ygrid=TRUE) %>%
@@ -677,7 +678,7 @@ SLC_PRCP_PLT <- ts_plot(SLC_TS_PRCP_SHORT, title = "Monthly Rainfall Salt Lake C
 SLC_TS_SNOW_SHORT <- ts(SLC_AGG[, 4], start= c(2010,1), end= c(2019,12), frequency = 12)
 SLC_SNOW_PLT <- ts_plot(SLC_TS_SNOW_SHORT, title = "Monthly Snowfall Salt Lake City, UT", 
                         Xtitle ="Time",
-                        Ytitle="Total Montlhy Snowfall (inches)",
+                        Ytitle="Total Monthly Snowfall (inches)",
                         color="#4982ff",
                         Xgrid=TRUE,
                         Ygrid=TRUE) %>%
@@ -867,7 +868,7 @@ PHX_PRCP_CAST <- forecast(PHX_PRCP_MODEL, h=60)
 PHX_PRCP_CAST
 PHX_PRCP_CAST$lower<-apply(PHX_PRCP_CAST$lower, 2, function(x) ifelse(x < 0,0, x))
 plt <- plot_forecast(PHX_PRCP_CAST, title = "Five Year Forecast", 
-                      Ytitle = "Total Montly Precipitation",
+                      Ytitle = "Total Monthly Precipitation",
                        Xtitle = "Time") %>% layout(
                        xaxis = list(range=c(2015, 2024))
 )
@@ -909,7 +910,7 @@ SLC_PRCP_CAST <- forecast(SLC_PRCP_MODEL, h=60)
 SLC_PRCP_CAST
 SLC_PRCP_CAST$lower<-apply(SLC_PRCP_CAST$lower, 2, function(x) ifelse(x < 0,0, x))
 plt <- plot_forecast(SLC_PRCP_CAST, title = "Five Year Forecast", 
-                      Ytitle = "Total Montly Precipitation",
+                      Ytitle = "Total Monthly Precipitation",
                        Xtitle = "Time") %>% layout(
                        xaxis = list(range=c(2015, 2024))
 )
@@ -926,7 +927,7 @@ SLC_SNOW_CAST <- forecast(SLC_SNOW_MODEL, h=60)
 SLC_SNOW_CAST
 SLC_SNOW_CAST$lower<-apply(SLC_SNOW_CAST$lower, 2, function(x) ifelse(x < 0,0, x))
 plt <- plot_forecast(SLC_SNOW_CAST, title = "Five Year Forecast", 
-                      Ytitle = "Total Montly Snowfall",
+                      Ytitle = "Total Monthly Snowfall",
                        Xtitle = "Time") %>% layout(
                        xaxis = list(range=c(2015, 2024))
 )
