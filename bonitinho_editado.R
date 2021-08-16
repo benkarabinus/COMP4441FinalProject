@@ -7,13 +7,23 @@ library(lubridate)
 setwd("/home/ellmann/Documents/stats/COMP4441FinalProject")
 
 ABQ <- read.csv("ABQ.csv", header = T)
+profile_missing(ABQ)
+DEN <- read.csv("DEN.csv", header = T)
+DEN <- read.csv("DEN.csv", header = T)
+DEN <- read.csv("DEN.csv", header = T)
 ABQ$SNOW[is.na(ABQ$SNOW)] <- median(ABQ$SNOW, na.rm = T)
+DEN$SNOW[is.na(DEN$SNOW)] <- median(DEN$SNOW, na.rm = T)
 ABQTEMP <- data.frame(ABQ$TMAX, ABQ$TMIN)
 ind <- which(is.na(ABQ), arr.ind=TRUE)
 ABQ[ind] <- round(rowMeans(ABQTEMP, na.rm=TRUE)[ind[,1]],0)
+DENTEMP <- data.frame(DEN$TMAX, DEN$TMIN)
+ind <- which(is.na(DEN), arr.ind=TRUE)
+DEN[ind] <- round(rowMeans(DENTEMP, na.rm=TRUE)[ind[,1]],0)
 profile_missing(ABQ)
 ABQ <- transform(ABQ, DATE = as.Date(DATE))
 ABQ$MONTH_YEAR <- floor_date(ABQ$DATE,"month")
+
+
 
 
 ABQ_AGG_PRCP<- ABQ %>%
@@ -41,7 +51,7 @@ adf.test(ABQ_TS_TAVG,alternative = "stationary")
 
 model_prcp=auto.arima(ABQ_TS_PRCP)
 model_snow=auto.arima(ABQ_TS_SNOW)
-model_tavg=auto.arima(ABQ_TS_TAVG)
+model_tavg=auto.arima(ABQ_TS_TAVG) # how can I set limits to the preds?
 
 forecast_prcp=forecast(model_prcp,h=60)
 forecast_snow=forecast(model_snow,h=60)
@@ -54,3 +64,13 @@ forecast_snow$lower<-apply(forecast_snow$lower, 2, function(x) ifelse(x < 0, 0, 
 plot(forecast_prcp,xlim=c(2000,2024))
 plot(forecast_snow,xlim=c(2000,2024))
 plot(forecast_tavg,xlim=c(2010,2030))
+
+
+
+forecast(ABQ_TS_SNOW)
+
+
+
+
+
+ceiling(4.00001)
