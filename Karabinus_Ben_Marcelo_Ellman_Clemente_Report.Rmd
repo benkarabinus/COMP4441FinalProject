@@ -341,7 +341,7 @@ $$ARIMA(p,d,q)(P,D,Q)[S]$$
 
 ### Preparing to Model the Data Using SARIMA
 
-The first step when using the auto.arima function in R is to transform the data being analyzed into a "time series object.Time series objects will be created for mean monthly temperature (degrees Fahrenheit), total monthly precipitation (inches) and total monthly snowfall (inches) for each of the four locations being analyzed.
+The first step when using the auto.arima function in R is to transform the data being analyzed into a "time series object". Time series objects will be created for mean monthly temperature (degrees Fahrenheit), total monthly precipitation (inches) and total monthly snowfall (inches) for each of the four locations being analyzed.
 
 ```{r echo=TRUE}
 # create time series objects for mean monthly temperature 
