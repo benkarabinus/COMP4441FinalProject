@@ -1,6 +1,5 @@
 ---
-title: Seasonal Autoregressive Integrated Moving Acerage (SARIMA) Analysis and Predicition
-  of Seasonal Weather Patterns in the Four Corners Region of the United Steates
+title: Time Series Analysis of Seasonal Weather Patterns in the Four Corners Region of the United States
 author: "Ben Karabinus"
 date: "8/12/2021"
 output:
@@ -31,15 +30,14 @@ library(tseries)
 
 ## Problem Statement
 
-In the past decades there has been a noticeable increase in the volatility of weather patterns in the Western United States. In particular, the four corners region (Arizona, Colorado, New Mexico and Utah) have experienced prolonged drought, monsoon rainfall, and a noticeable increase in the intensity and duration of heat waves. To better understand seasonal weather patterns in the region this report focuses on a time-series analysis of mean monthly temperature, total monthly precipitation and total monthly snowfall in the period between January 1, 1970 and December 31, 2019. Time-series analysis was carried using a Seasonal Autregressive Integrated Moving Average (SARIMA) model. The primary research questions addressed are as follows:
+In the past decades there has been a noticeable increase in the volatility of weather patterns in the Western United States. In particular, the four corners region (Arizona, Colorado, New Mexico and Utah) have experienced prolonged drought, monsoon rainfall, and a noticeable increase in the intensity and duration of heat waves. To better understand seasonal weather patterns in the region this report focuses on a time-series analysis of mean monthly temperature, total monthly precipitation and total monthly snowfall in the period between January 1, 1970 and December 31, 2019. Time series analysis was conducted using a Seasonal Autregressive Integrated Moving Average (SARIMA) model. The primary research questions addressed are as follows:
 
 * Is there a noticeable trend in monthly mean temperature, total monthly precipitation, or total monthly snowfall?
-* What does the trend in any or all of these measures tell us about weather patterns in the previous 5 decades?
 * Is the SARIMA model an effective means of visualizng and predicting mean monthly temperature, total monthly precipitation and total monthly snowfall in the four corners region of the United States.
 
 ## Data Collection
 
-Data for the analysis was sourced from the GLobal Historical Climatology Network (GHCN). The GHCN is an integrated database of daily climate summaries from land surface weather stations across the globe. The data contain records from more than 100,000 stations in 180 countries and territories. All records are subject to a common suite of quality assurance reviews to miantain accuracy though uniformity of reporting stndards. All GHCN records include but are not limited too the following daily variables: 
+Data for the analysis was sourced from the GLobal Historical Climatology Network (GHCN). The GHCN is an integrated database of daily climate summaries from land surface weather stations across the globe. GHCN data contain records from more than 100,000 stations in 180 countries and territories. All records are subject to a common suite of quality assurance reviews to miantain accuracy through uniformity of reporting stndards. All GHCN records include but are not limited too the following daily variables: 
 
 * Daily maximum and Daily minimum temperatue 
 * Total daily precipitation
@@ -47,25 +45,25 @@ Data for the analysis was sourced from the GLobal Historical Climatology Network
 
 ### US Collection of GHCN Data
 
-Daily weather records from the United States are compiled from a dozen separate datasets archived at the Nation Centers of Environmental Information (NCEI), a branch of the National Oceanic and Atmospheric Administration (NOAA). NCEI is responsible fo hosting and providing access to one of the most significant stores of environmental data in existence with over 37 petabytes of oceanic, atmospheric and geophyscical data (National Centers for Environmental Information, 2019).
+Daily weather records from the United States are compiled from a dozen separate datasets archived at the National Centers of Environmental Information (NCEI), a branch of the National Oceanic and Atmospheric Administration (NOAA). NCEI is responsible for hosting and providing access to one of the most significant stores of environmental data in existence with over 37 petabytes of oceanic, atmospheric and geophyscical data (National Centers for Environmental Information, 2019).
 
 ### Variables Included in the Model
 
-* Average daily temperature (Degrees Farenheight)
-* Total Daily precipitation (Inches)
-* Total Daily Snowfall (Inches)
+* Average daily temperature (degrees farenheight)
+* Total Daily precipitation (inches)
+* Total Daily Snowfall (inches)
 
-For more detailed information on each of the variables listed above pleas see the data dictionary (Appendix A)
+For more detailed information on each of the variables listed above please see (Appendix A)
 
 ## Data Set Features and Data Preparation
 
 ### Data Set Summary 
 
-The data used in this report were observed at weather stations in four major cities located in the southwestern United States, specifically (Phoenix, Arizona), (Denver, Colorado), (Albequerque,New Mexico) and (Salt Lake City, Utah). Data was collected via land-based weather stations at major airports in each city with the exception being data collected in Denver, Colorado. Weather observations for Denver were collected using a land-based weather station located in the Sand Creek Open Space in the Denver Central Park Region in the Northwest corner of the city. Data for each city where downloaded as seperate comma seperated (csv) files. Exploration of the features of the data, data cleansing and initial visualization were carried out using the "DataExplorer" package available in R.
+The data used in this report were observed at weather stations in four major cities located in the southwestern United States, specifically (Phoenix, Arizona), (Denver, Colorado), (Albequerque,New Mexico) and (Salt Lake City, Utah). Data was collected via land-based weather stations at major airports in each city with the exception being data collected in Denver, Colorado. Weather observations for Denver were collected using a land-based weather station located in the Sand Creek Open Space in the Denver Central Park Region in the Northwest corner of the city. Data for each city where downloaded as seperate comma seperated value (csv) files. Exploration of key features of the data sets, data cleansing and initial visualization were carried out using the "DataExplorer" library available in R.
 
 ### Data Discovery and Cleansing Process 
 
-Prior to conducting time-series analysis
+Each of the four data sets was examined prior to conducting time series analysis. Initial analysis focused on locating and replacing missing values, transforming data to appropriate types for anlysis and agreggating daily measurements. 
 
 ```{r echo=FALSE}
 # Load Datasets
@@ -105,17 +103,17 @@ summary(SLC)
 
 #### Structure of Each Data Set (Number of Observations and Variable Type)
 
-```{r echo=TRUE}
+```{r echo=FALSE}
 # Albuquerque
 str(ABQ)
 ```
 
-```{r echo=TRUE}
+```{r echo=FALSE}
 # Denver
 str(DEN)
 ```
 
-```{r echo=TRUE}
+```{r echo=FALSE}
 # Phoenix
 str(PHX)
 ```
@@ -153,7 +151,7 @@ plot_missing(SLC, title = "Salt Lake City ", group=c("No Missing Values"=0,
 
 #### Replace Misssing Values 
 
-The above graphs shows that each of the data sets are missing observations for one or more values. To avoid the effects of outliers in the missing values for TMIN, TMAX, PRCP and SNOW will be replaced with the  median value for each of the respective values. According GHCN Daily TAVG is calculated by taking the mean of value for daily observations of TMAX and TMIN and rounding up to the nearest integer, That is daily $TAVG=ceiling(\frac{TMAX+TMIN}{2})$. Therefore, missing values for TAVG will be replaced using this formula.  
+The above graphs show that each of the data sets are missing observations for one or more values. To avoid the effects of outliers, missing values for TMIN, TMAX, PRCP and SNOW will be replaced with the median value for each of the respective variables. According GHCN Daily TAVG is calculated by taking the mean value for daily observations of TMAX and TMIN and rounding up to the nearest integer, That is daily $TAVG=ceiling(\frac{TMAX+TMIN}{2})$. Therefore, missing values for TAVG will be replaced using this formula. For readability only the replacement of missing values from the "ABQ" data set is detailed below. Please see the .rmd version of this report for a more in depth eplanation of the replacement process.
 
 ```{r echo=TRUE}
 # replace missing values in ABQ
@@ -184,7 +182,7 @@ ind <- which(is.na(DEN), arr.ind=TRUE)
 # all temperatures are given as whole numbers in dataset so round the mean
 DEN[ind] <- ceiling(rowMeans(DENTEMP, na.rm=TRUE)[ind[,1]])
 #check to ensure replacement 
-profile_missing(DEN)
+#profile_missing(DEN)
 ```
 
 ```{r echo=FALSE}
@@ -197,7 +195,7 @@ ind <- which(is.na(PHX), arr.ind=TRUE)
 # all temperatures are given as whole numbers in dataset so round the mean
 PHX[ind] <- ceiling(rowMeans(PHXTEMP, na.rm=TRUE)[ind[,1]])
 #check to ensure replacement 
-profile_missing(PHX)
+#profile_missing(PHX)
 ```
 
 ```{r echo=FALSE}
@@ -209,7 +207,7 @@ SLCTEMP <- data.frame(SLC$TMAX, SLC$TMIN)
 ind <- which(is.na(SLC), arr.ind=TRUE)
 SLC[ind] <- ceiling(rowMeans(SLCTEMP, na.rm=TRUE)[ind[,1]])
 #check to ensure replacement 
-profile_missing(SLC)
+#profile_missing(SLC)
 ```
 
 #### Preparing Data for Time Series Analysis
@@ -232,18 +230,18 @@ ABQ_DELTA
 ```
 
 ```{r echo=FALSE}
-DEN_DELTA
+#DEN_DELTA
 ```
 
 ```{r echo=FALSE}
-PHX_DELTA
+#PHX_DELTA
 ```
 
 ```{r echo=FALSE}
-SLC_DELTA
+#SLC_DELTA
 ```
 
-#### Aggregate Data for Analysis of Monthly Values 
+#### Aggregate Data for Monthly Analysis 
 
 ```{r echo=TRUE}
 # Albuquerque
@@ -274,7 +272,7 @@ DEN_AGG <- DEN %>%
 ```
 
 
-```{r echo=TRUE}
+```{r echo=FALSE}
 # Phoenix 
 # create column month year to aggregate data for time series 
 PHX$MONTH_YEAR <- floor_date(PHX$DATE,"month")
@@ -287,7 +285,7 @@ PHX_AGG <- PHX %>%
 ```
 
 
-```{r echo=TRUE}
+```{r echo=FALSE}
 # Salt Lake City 
 # create column month year to aggregate data for time series 
 SLC$MONTH_YEAR <- floor_date(SLC$DATE,"month")
@@ -299,11 +297,11 @@ SLC_AGG <- SLC %>%
   as.data.frame()
 ```
 
-### Time Series Analysis Using Seasonal Autoregressive Integrated Moving Average SARIMA Model
+### Analysis Using Seasonal Autoregressive Integrated Moving Average SARIMA Model
 
 #### What is a SARIMA Model?
 
-A SARIMA model is the seasonal flavor of the autoregressive integrated moving average (ARIMA) model. ARIMA and SARIMA models are a statistical technique used to analyze times series data and in certain cases predict future values. The goal of autoregressive models is to predict future values of the target variable by regressing against past observations of the variable. That is lagged values of the target variable are used as independent variables "x's" in the regression equation (Yiu, 2020). Seasonal autoregressive models are used to perform similar analysis while accounting for any seasonality obesrved in the time series being analyzed. ARIMA and SARIMA models also incorporate differencing "I" to correct for data that is not stationary and moving average "MA" to include errors in previous predictions as a parameter in the model. To better understand the method a brief summary of each component is given below.
+A SARIMA model is the seasonal flavor of the autoregressive integrated moving average (ARIMA) model. ARIMA and SARIMA models are a statistical technique used to analyze times series data and in certain cases predict future values. The goal of autoregressive models is to predict future values of the target variable by regressing against past observations of the variable. That is lagged values of the target variable are used as independent variables "x's" in the regression equation (Yiu, 2020). Seasonal autoregressive models are used to perform similar analysis while accounting for any seasonality obesrved in the time series being analyzed. ARIMA and SARIMA models also incorporate differencing to correct for data that is not stationary and a moving average component that includes errors in previous predictions as a parameter in the model. To better understand the method a brief summary of each component is given below.
 
 
 #### Autoregressive (p)
@@ -316,7 +314,7 @@ By tweaking this equation we can attemmt to predict future values of Y.
 
 $$Y_{forward1}=B0+B1*Y+B2*Y_{lag1}......Bn*Y_{lag(n-1)}$$
 
-The above equation represents whats commonly referred to as an AR(1) model. An autoregressive model using a single lag to predict future values of Y, the outcome. 
+The above equation represents whats commonly referred to as an AR(1) model. An autoregressive model using a single lag to predict future values of Y (Yiu, 2020). 
 
 #### Integrated (d)
 
@@ -336,7 +334,7 @@ $$Y=mean(Y)+B1*E_{lag1}$$
 
 #### Seasonal (PDQ)[Seasonality]
 
-When constructing an ARIMA model it's important to note the presence of cyclical or predictable patterns in the data being analyzed. Many times these patterns represent seasonality. If you wanted to model the sale of baseball tickets on a monthly basis you would notice a sharp decrease to zero tickets sold between the months of February and March. That's becuse this is the offseason for baseball. The offseason begins and ends at roughly the same time every year. So when using an ARIMA model we should account for this seasonality by adding seasonal parameters to the model. Using the auto.arima function in R approximates the seasonal parameters of an ARIMA model helping to account for seasonality and improve model performance. An abstraction of a SARIMA model and it's parameters as output by the auto.ariam function is given below.
+When constructing an ARIMA model it's important to note the presence of cyclical or predictable patterns in the data being analyzed. Many times these patterns represent seasonality. If you wanted to model the sale of baseball tickets on a monthly basis you would notice a sharp decrease to zero tickets sold between the months of February and March. That's becuse this is the offseason for baseball. The offseason begins and ends at roughly the same time every year. So when using an ARIMA model we should account for this seasonality by adding seasonal parameters to the model. Using the auto.arima function in R approximates the seasonal parameters of an ARIMA model helping to account for seasonality and improve model performance. An abstraction of a SARIMA model and it's parameters as output by the auto.arima function is given below.
 
 $$ARIMA(p,d,q)(P,D,Q)[S]$$
 
@@ -371,6 +369,8 @@ $$H_o: \space The \space time \space series \space is \space non-stationary.$$
 
 $$H_A: \space the \space time \space series \space is \space stationary$$
 
+When applied to each of the time series above the output of the adf.test function showed the null hypothesis should be rejected. Instead the alternate hypothesis that the data are stationary should be accepted. The adf.test function as applied to the "ABQ_TS_TEMP" time series object is given as an example below. For a more detailed explanation of the process please see the .rmd version of this report.
+
 ```{r echo=TRUE}
 # perform the ADF test for ABQ
 adf.test(ABQ_TS_TEMP)
@@ -378,22 +378,24 @@ adf.test(ABQ_TS_TEMP)
 
 ```{r echo=FALSE}
 # Perform the ADF test for remaining time series objects
-adf.test(ABQ_TS_PRCP)
-adf.test(ABQ_TS_SNOW)
-adf.test(DEN_TS_TEMP)
-adf.test(DEN_TS_PRCP)
-adf.test(DEN_TS_SNOW)
-adf.test(PHX_TS_TEMP)
-adf.test(PHX_TS_PRCP)
-adf.test(PHX_TS_SNOW)
-adf.test(SLC_TS_TEMP)
-adf.test(SLC_TS_PRCP)
-adf.test(SLC_TS_SNOW)
+#adf.test(ABQ_TS_PRCP)
+#adf.test(ABQ_TS_SNOW)
+#adf.test(DEN_TS_TEMP)
+#adf.test(DEN_TS_PRCP)
+#adf.test(DEN_TS_SNOW)
+#adf.test(PHX_TS_TEMP)
+#adf.test(PHX_TS_PRCP)
+#adf.test(PHX_TS_SNOW)
+#adf.test(SLC_TS_TEMP)
+#adf.test(SLC_TS_PRCP)
+#adf.test(SLC_TS_SNOW)
 ```
 
 #### Visualize the Data
 
 An important step in time series analysis is to visually inspect the data. Time series visualization allows for further assessment of whether the data are stationary, decomposition of time series attributes and ispection for anomalies in the data.
+
+* High-level visual of the time series objects created for measurements from ALbuquerque
 
 ```{r echo=FALSE}
 # plot the time series data for Albuquerque (birds eye view)
@@ -402,6 +404,8 @@ plot(ABQ_TS_TEMP)
 plot(ABQ_TS_PRCP)
 plot(ABQ_TS_SNOW)
 ```
+
+* Shortened time-span to allow for closer look at the behavior of each variable
 
 ```{r echo=FALSE}
 # shorten the time span and customize the plot (close up view)
@@ -459,6 +463,7 @@ ABQ_PRCP_PLT
 ABQ_TEMP_PLT
 ```
 
+* Decompostition of time series from the city of Albuquerque shows that the series for mean monthly temperature, total  monthly precipitation and total monthly snowfall each exhibit a strong seasonal component.Total monthly prcipitation and total monthly snowfall both show much more variance in observed values over time. It's worth noting that there seems to be an increase in mean monthly temperature around the year 2016.
 
 ```{r echo=FALSE}
 ts_decompose(ABQ_TS_TEMP_SHORT)
@@ -467,7 +472,7 @@ ts_decompose(ABQ_TS_SNOW_SHORT)
 ```
 
 
-
+* High-level visual of the time series objects created for measurements from Denver
 
 ```{r echo=FALSE}
 # plot the time series data for Denver (birds eye view)
@@ -476,6 +481,9 @@ plot(DEN_TS_TEMP)
 plot(DEN_TS_PRCP)
 plot(DEN_TS_SNOW)
 ```
+
+
+* Shortened time-span to allow for closer look at the behavior of each variable
 
 
 ```{r echo=FALSE}
@@ -534,12 +542,26 @@ DEN_PRCP_PLT
 DEN_TEMP_PLT
 ```
 
+* Decompostition of time series from the city of Denver shows that the series for mean monthly temperature, total  monthly precipitation and total monthly snowfall each exhibit a strong seasonal component similar to the time series data from Albuquerque. Examining the plots of the decomposed series below shows that the trend in each series seems exhibit a somewhat cyclical pattern. Eluding to the fact that there may be a seasonal pattern occuring on multi-year scale sucha as, the effects of the El Nino-Southern Oscilation cycle.
+
 
 ```{r echo=TRUE}
 par(mfrow=c(1,3))
 ts_decompose(DEN_TS_TEMP_SHORT)
 ts_decompose(DEN_TS_PRCP_SHORT)
 ts_decompose(DEN_TS_SNOW_SHORT)
+```
+
+
+* High-level visual of the time series objects created for measurements from Phoenix 
+
+
+```{r echo=FALSE}
+# plot the time series data for Phoenix (birds eye view)
+par(mfrow=c(3,1))
+plot(PHX_TS_TEMP)
+plot(PHX_TS_PRCP)
+plot(PHX_TS_SNOW)
 ```
 
 
@@ -600,11 +622,22 @@ PHX_PRCP_PLT
 PHX_TEMP_PLT
 ```
 
+ * Decompostition of time series from the city of Phoenix shows that the series for mean monthly temperature, total  monthly precipitation and total monthly snowfall each exhibit a strong seasonal component similar to the time series data from both Denver and Albuquerque. Examining the plots of the decomposed series below it's worth noting that there seems to be a slighty upward trend in both mean monthly temperature and total monthly precipitation ocurring around around the year 2016. The trend in monthly precipitation may be attributed to a multi-year seasonal pattern, but the rising trend in mean monthly temperature appears at a glance to be more of a departure from the trend of past observations. The decomposition of the series for monthly snowfall confirms that it rarely snows in Phoenix. The series will be omitted from further analysis in this report.
 
 ```{r echo=FALSE}
 ts_decompose(PHX_TS_TEMP_SHORT)
 ts_decompose(PHX_TS_PRCP_SHORT)
 ts_decompose(PHX_TS_SNOW_SHORT)
+```
+
+* High-level visual of the time series objects created for measurements from Salt Lake City
+
+```{r echo=FALSE}
+# plot the time series data for Salt Lake City (birds eye view)
+par(mfrow=c(3,1))
+plot(SLC_TS_TEMP)
+plot(SLC_TS_PRCP)
+plot(SLC_TS_SNOW)
 ```
 
 
