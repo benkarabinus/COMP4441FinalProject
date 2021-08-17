@@ -3,8 +3,8 @@ title: Time Series Analysis of Seasonal Weather Patterns in the Four Corners Reg
 author: "Ben Karabinus"
 date: "8/12/2021"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
   word_document: default
   always_allow_html: true
 ---
@@ -760,7 +760,7 @@ ABQ_SNOW_MODEL
 ```{r echo=FALSE}
 ABQ_SNOW_CAST <- forecast(ABQ_SNOW_MODEL, h=60)
 ABQ_SNOW_CAST
-ABQ_SNOW_CAST$lower<-apply(ABQ_PRCP_CAST$lower, 2, function(x) ifelse(x < 0,0, x))
+ABQ_SNOW_CAST$lower<-apply(ABQ_SNOW_CAST$lower, 2, function(x) ifelse(x < 0,0, x))
 plt <- plot_forecast(ABQ_SNOW_CAST, title = "Five Year Forecast", 
                       Ytitle = "Total Monthly Snowfall",
                        Xtitle = "Time") %>% layout(
@@ -785,7 +785,7 @@ DEN_TEMP_MODEL
 
 ```{r echo=FALSE}
 # forecast using the DEN_TEMP_MODEL
-DEN_TEMP_CAST <- forecast(ABQ_TEMP_MODEL, h=60)
+DEN_TEMP_CAST <- forecast(DEN_TEMP_MODEL, h=60)
 DEN_TEMP_CAST
 plt <- plot_forecast(DEN_TEMP_CAST, title = "Five Year Forecast", 
                       Ytitle = "Mean Monthly Temperature",
@@ -804,10 +804,10 @@ DEN_PRCP_MODEL
 
 ```{r echo=FALSE}
 # forecast using the DEN_PRCP_MODEL
-DEN_PRCP_CAST <- forecast(ABQ_PRCP_MODEL, h=60)
+DEN_PRCP_CAST <- forecast(DEN_PRCP_MODEL, h=60)
 DEN_PRCP_CAST
 DEN_PRCP_CAST$lower<-apply(DEN_PRCP_CAST$lower, 2, function(x) ifelse(x < 0,0, x))
-plt <- plot_forecast(ABQ_PRCP_CAST, title = "Five Year Forecast", 
+plt <- plot_forecast(DEN_PRCP_CAST, title = "Five Year Forecast", 
                       Ytitle = "Total Monthly Precipitation",
                        Xtitle = "Time") %>% layout(
                        xaxis = list(range=c(2015, 2024))
@@ -825,7 +825,7 @@ summary(DEN_SNOW_MODEL)
 DEN_SNOW_CAST <- forecast(DEN_SNOW_MODEL, h=60)
 DEN_SNOW_CAST
 DEN_SNOW_CAST$lower<-apply(DEN_SNOW_CAST$lower, 2, function(x) ifelse(x < 0,0, x))
-plt <- plot_forecast(ABQ_PRCP_CAST, title = "Five Year Forecast", 
+plt <- plot_forecast(DEN_SNOW_CAST, title = "Five Year Forecast", 
                       Ytitle = "Total Monthly Snowfall",
                        Xtitle = "Time") %>% layout(
                        xaxis = list(range=c(2015, 2024))
@@ -869,6 +869,19 @@ PHX_PRCP_CAST
 PHX_PRCP_CAST$lower<-apply(PHX_PRCP_CAST$lower, 2, function(x) ifelse(x < 0,0, x))
 plt <- plot_forecast(PHX_PRCP_CAST, title = "Five Year Forecast", 
                       Ytitle = "Total Monthly Precipitation",
+                       Xtitle = "Time") %>% layout(
+                       xaxis = list(range=c(2015, 2024))
+)
+plt
+```
+
+```{r echo=FALSE}
+# forecast using the PHX_SNOW_MODEL
+PHX_SNOW_CAST <- forecast(PHX_SNOW_MODEL, h=60)
+PHX_SNOW_CAST
+PHX_SNOW_CAST$lower<-apply(PHX_SNOW_CAST$lower, 2, function(x) ifelse(x < 0,0, x))
+plt <- plot_forecast(PHX_SNOW_CAST, title = "Five Year Forecast", 
+                      Ytitle = "Total Monthly Snowfall",
                        Xtitle = "Time") %>% layout(
                        xaxis = list(range=c(2015, 2024))
 )
